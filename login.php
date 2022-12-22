@@ -1,31 +1,35 @@
 <?php
-$host="localhost";
-		$uname="root";
-		$pas="";
-		$db_name="cman";
-		$tbl_name="members";
+        include('lib/dbcon.php');
+		dbcon(); 
+		session_start();	
+		$username = $_POST['username'];
+		$password = $_POST['password'];
 		
-		$conn = mysqli_connect("$host","$uname","$pas") or die ("cannot connect");
-		mysqli_select_db($conn,"$db_name") or die ("cannot select db");
+		/*................................................ admin .....................................................*/
+			$query = "SELECT * FROm admin WHERE username='$username' AND password='$password'";
+			$result = mysqli_query($conn,$query)or die(mysqli_error());
+			$row = mysqli_fetch_array($result);
+			$num_row = mysqli_num_rows($result);
+			
+		/*...................................................student ..............................................*/
+		$query_student = mysqli_query($conn,"SELECT * FROm student WHERE username='$username' AND password='$password'")or die(mysqli_error());
+		$num_row_student = mysqli_num_rows($query_student);
+		$row_student = mysqli_fetch_array($query_student);
+		
+		if( $num_row > 0 ) { 
+		$_SESSION['id']=$row['admin_id'];
+		echo 'true_admin';
+		
+		mysqli_query($conn,"insert into user_log (username,login_date,admin_id)values('$username',NOW(),".$row['admin_id'].")")or die(mysqli_error());
+		
+		}else if ($num_row_student > 0){
+		$_SESSION['student']=$row_student["student_id"];
+		echo 'true';
+		
+		mysqli_query($conn,"insert into user_log (username,login_date,student_id)values('$username',NOW(),".$row_student["student_id"].")")or die(mysqli_error());
+	
+		 }else{ 
+				echo 'false';
+		}	
+				
 		?>
-<?php
-if (isset($_POST['login'])){
-
-$username=$_POST['username'];
-$password=$_POST['password'];
-
-$login_query=mysqli_query($conn,"select * from members where mobile='$username' and password='$password'");
-$count=mysqli_num_rows($login_query);
-$row=mysqli_fetch_array($login_query);
-
-
-if ($count > 0){
-session_start();
-$_SESSION['id']=$row['id'];
-header('location: members/dashboard.php');
-
-}else{
-	header('location:index.php');
-}
-}
-?>
